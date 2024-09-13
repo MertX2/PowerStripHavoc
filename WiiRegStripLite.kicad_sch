@@ -16016,7 +16016,7 @@
 				)
 			)
 		)
-		(property "Value" "~"
+		(property "Value" "TPS61023DRLR"
 			(at 165.354 111.76 0)
 			(effects
 				(font
