@@ -1,0 +1,5 @@
+- IP2721 ODER CH224K
+- CH224K Example Project https://hackaday.io/project/194207-usb-power-delivery-decoy-ch224k
+- BQ driver, 2 Versionen, Spencer ist original, Ratti ist ein Fork für den BQ25896
+- BQ driver selber implementieren SOLLTE einfach sein
+- Evtl. RVLOADER pms spoofing???
