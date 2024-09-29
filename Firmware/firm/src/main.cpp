@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <tinyNeoPixel_Static.h>
+#include <avr/sleep.h>
 
 // put function declarations here:
 
@@ -51,6 +52,25 @@ uint8_t reg0D = 0; // USeless
 uint32_t intermediate = 1023UL * 1500;
 
 uint8_t ADDR = 106;
+
+uint16_t readSupplyVoltage() { // returns value in millivolts to avoid floating point //NUR NÖTIG, WENN BQ VSYS SICH NICHT FESTLEGEN LÄSST !!!
+  
+    analogReference(VDD);
+    VREF.CTRLA = VREF_ADC0REFSEL_1V5_gc;
+    // there is a settling time between when reference is turned on, and when it becomes valid.
+    // since the reference is normally turned on only when it is requested, this virtually guarantees
+    // that the first reading will be garbage; subsequent readings taken immediately after will be fine.
+    // VREF.CTRLB|=VREF_ADC0REFEN_bm;
+    // delay(10);
+    uint16_t reading = analogRead(ADC_INTREF); // Crumple the reading up into a ball and toss in the general direction of the trash.
+    reading = analogRead(ADC_INTREF);          // Now we take the *real* reading.
+    uint32_t intermediate = 1023UL * 1500;     // This would overflow a 16-bit variable.
+    reading = intermediate / reading;          // Long division sucks! This single line takes about 600 clocks to execute!
+    // And **this** is why the reference voltages on the 0/1-series parts suck! The comparable math on the 2-series takes maybe
+    // 40 clocks, at most!
+    return reading;
+  
+}
 
 uint16_t getAnalogValue() {
  return ADC0.RES / 2; // return the most recent result on channel A
@@ -250,10 +270,27 @@ uint16_t getICOILIM() { //REG13
   return adcVal;
 }
 
+bool regWriteCheck() {
+  if (readRawReg(1) == 197) {
+    Serial.println("REG WRITE SUCCESS!");
+    return true;
+  }
+  else {
+    Serial.println("ERROR OCCURED DURING WRITE!");
+    leds.setPixelColor(0, 255, 0, 0); // first LED full RED
+    leds.show();
+    leds.setPixelColor(0, 0, 0, 0);
+    leds.show();
+    leds.setPixelColor(0, 255, 0, 0); 
+    leds.show();
+    return false;
+  }
+}
+
 uint8_t getTemp() {
-  analogReference(INTERNAL2V5); // set reference to the desired voltage, and set that as the ADC reference.
-  analogReference(VDD); // Set the ADC reference to VDD. Voltage selected previously is still the selected, just not set as the ADC reference.
-  uint16_t vdd = intermediate / analogRead(ADC_INTREF);
+  
+  
+  uint16_t vdd = intermediate / readSupplyVoltage(); //NUR NÖTIG, WENN BQ VSYS SICH NICHT FESTLEGEN LÄSST !!!
   analogReference(INTERNAL2V5);
 
   uint16_t average = getAnalogValue();
@@ -270,8 +307,61 @@ uint8_t getTemp() {
 }
 
 
+
+ISR(PORTA_PORT_vect, ISR_NAKED)
+{
+  PORTA.PIN2CTRL &= ~PORT_ISC_gm;
+  VPORTA.INTFLAGS = (1 << 2);
+  reti();
+}
+
+
+
+unsigned long startMillis = 0;
+unsigned long loopMillis = 0;
+
+void goToSleep();
+
+void wakeSetup() {
+    startMillis = millis();
+    while(uint16_t(millis - startMillis) < 1500) {
+      if (digitalReadFast(BTN_PIN) == HIGH) {
+        goToSleep();
+      }
+    }
+    ADC0.CTRLA |= 1;
+    digitalWriteFast(EN_PIN, HIGH);
+}
+
+void goToSleep() {
+  ADC0.CTRLA &= ~ADC_ENABLE_bm;
+  PORTA.PIN2CTRL |= PORT_ISC_gm;
+  if(!regWriteCheck) {
+    writeToAllRegs();
+  }
+  sleep_cpu();
+  wakeSetup();
+}
+
+void powerButtonCheck() {
+  if(digitalReadFast(BTN_PIN) == LOW) {
+    startMillis = millis();
+    while(uint16_t(millis - startMillis) < 1500) {
+      if (digitalReadFast(BTN_PIN) == HIGH)
+      {
+        return;
+      }
+    goToSleep();
+    }
+  }
+}
+
+uint16_t batVArr[50];
+
 void setup() {
-  ADC0.MUXPOS = 0x01; //reads from PA6/arduino pin 2, ADC0 channel 6
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  sleep_enable();
+  ADC0.MUXPOS = 0x01; //reads from PA1
   ADC0.CTRLA = ADC_ENABLE_bm|ADC_FREERUN_bm; //start in freerun
   ADC0.CTRLB = ADC_SAMPNUM_ACC2_gc;
   ADC0.COMMAND=ADC_STCONV_bm; //start first conversion!
@@ -289,22 +379,16 @@ void setup() {
   turnOffPWM(PIN_PA5);
   //Neopixel pin setup
   pinModeFast(PIN_PA7, OUTPUT);
-  leds.setPixelColor(0, 255, 0, 0); // first LED full RED
-  leds.show(); 
   
+  pinModeFast(BTN_PIN, INPUT_PULLUP);
+  pinModeFast(EN_PIN, OUTPUT);
   pinModeFast(FAN_PIN, OUTPUT);
 
   Serial.begin(9600);
   Wire.begin(ADDR);
   writeToAllRegs();
   Serial.println("REGS SETUP!");
-  if (readRawReg(1) == 197) {
-    Serial.println("REG WRITE SUCCESS!");
-  }
-  else {
-    Serial.println("ERROR OCCURED DURING WRITE!");
-  }
-
+  goToSleep();
 }
 
 void fanCheck() {
@@ -322,10 +406,25 @@ void fanCheck() {
   }
 }
 
+
+
 void loop() {
+  if(millis() - loopMillis > 4000) {
+    loopMillis = millis();
+    fanCheck();
+  }
+  powerButtonCheck();
+  uint16_t batV = getBatVoltage();
+  if (3764 <  batV < 3844) {
+  }
+  
+}
   // put your main code here, to run repeatedly:
   
+
+
   
-} 
+  
+
 
 // put function definitions here:
