@@ -3,7 +3,6 @@
 #include <tinyNeoPixel_Static.h>
 #include <avr/sleep.h>
 
-// put function declarations here:
 
 #define BTN_PIN PIN_PA5
 #define EN_PIN PIN_PA2
@@ -158,13 +157,34 @@ uint16_t getBatVoltage() { //REG0E
   //b[7] = 0 != (regData & 128);
 
   uint16_t adcVal = 2304;
-  adcVal += b[0] * 20;
+  if(b[0]) {
+    adcVal += 20;
+  }
+  if(b[1]) {
+    adcVal += 40;
+  }
+  if(b[2]) {
+    adcVal += 80;
+  }
+  if(b[3]) {
+    adcVal += 160;
+  }
+  if(b[4]) {
+    adcVal += 320;
+  }
+  if(b[5]) {
+    adcVal += 640;
+  }
+  if(b[6]) {
+    adcVal += 1280;
+  }
+  /*adcVal += b[0] * 20;
   adcVal += b[1] * 40;
   adcVal += b[2] * 80;
   adcVal += b[3] * 160;
   adcVal += b[4] * 320;
   adcVal += b[5] * 640;
-  adcVal += b[6] * 1280;
+  adcVal += b[6] * 1280;*/
   return adcVal;
 }
 
@@ -182,13 +202,34 @@ uint16_t getSysVoltage() { //REG0F
   //b[7] = 0 != (regData & 128);
 
   uint16_t adcVal = 2304;
-  adcVal += b[0] * 20;
+  if(b[0]) {
+    adcVal += 20;
+  }
+  if(b[1]) {
+    adcVal += 40;
+  }
+  if(b[2]) {
+    adcVal += 80;
+  }
+  if(b[3]) {
+    adcVal += 160;
+  }
+  if(b[4]) {
+    adcVal += 320;
+  }
+  if(b[5]) {
+    adcVal += 640;
+  }
+  if(b[6]) {
+    adcVal += 1280;
+  }
+  /*adcVal += b[0] * 20;
   adcVal += b[1] * 40;
   adcVal += b[2] * 80;
   adcVal += b[3] * 160;
   adcVal += b[4] * 320;
   adcVal += b[5] * 640;
-  adcVal += b[6] * 1280;
+  adcVal += b[6] * 1280;*/
   return adcVal;
 }
 
@@ -206,13 +247,34 @@ uint16_t getVBUSVoltage() { //REG11
   //b[7] = 0 != (regData & 128);
 
   uint16_t adcVal = 2600;
-  adcVal += b[0] * 100;
+  if(b[0]) {
+    adcVal += 100;
+  }
+  if(b[1]) {
+    adcVal += 200;
+  }
+  if(b[2]) {
+    adcVal += 400;
+  }
+  if(b[3]) {
+    adcVal += 800;
+  }
+  if(b[4]) {
+    adcVal += 1600;
+  }
+  if(b[5]) {
+    adcVal += 3200;
+  }
+  if(b[6]) {
+    adcVal += 6400;
+  }
+  /*adcVal += b[0] * 100;
   adcVal += b[1] * 200;
   adcVal += b[2] * 400;
   adcVal += b[3] * 800;
   adcVal += b[4] * 1600;
   adcVal += b[5] * 3200;
-  adcVal += b[6] * 6400;
+  adcVal += b[6] * 6400;*/
   return adcVal;
 }
 
@@ -237,13 +299,34 @@ uint16_t getChrgCurrent() { //REG12
   //b[7] = 0 != (regData & 128);
 
   uint16_t adcVal = 2304;
-  adcVal += b[0] * 50;
+  if(b[0]) {
+    adcVal += 50;
+  }
+  if(b[1]) {
+    adcVal += 100;
+  }
+  if(b[2]) {
+    adcVal += 200;
+  }
+  if(b[3]) {
+    adcVal += 400;
+  }
+  if(b[4]) {
+    adcVal += 800;
+  }
+  if(b[5]) {
+    adcVal += 1600;
+  }
+  if(b[6]) {
+    adcVal += 3200;
+  }
+  /*adcVal += b[0] * 50;
   adcVal += b[1] * 100;
   adcVal += b[2] * 200;
   adcVal += b[3] * 400;
   adcVal += b[4] * 800;
   adcVal += b[5] * 1600;
-  adcVal += b[6] * 3200;
+  adcVal += b[6] * 3200;*/
   return adcVal;
 }
 
@@ -261,12 +344,30 @@ uint16_t getICOILIM() { //REG13
   //b[7] = 0 != (regData & 128);
 
   uint16_t adcVal = 2304;
-  adcVal += b[0] * 50;
+  if(b[0]) {
+    adcVal += 50;
+  }
+  if(b[1]) {
+    adcVal += 100;
+  }
+  if(b[2]) {
+    adcVal += 200;
+  }
+  if(b[3]) {
+    adcVal += 400;
+  }
+  if(b[4]) {
+    adcVal += 800;
+  }
+  if(b[5]) {
+    adcVal += 1600;
+  }
+  /*adcVal += b[0] * 50;
   adcVal += b[1] * 100;
   adcVal += b[2] * 200;
   adcVal += b[3] * 400;
   adcVal += b[4] * 800;
-  adcVal += b[5] * 1600;
+  adcVal += b[5] * 1600;*/
   return adcVal;
 }
 
@@ -406,16 +507,85 @@ void fanCheck() {
   }
 }
 
+uint8_t batStat = 0;
+bool cycle = 0;
 
+void neoPixelTask() {
+  switch (batStat)
+  {
+  case 6:
+    if(cycle) {
+      cycle = 0;
+      leds.setPixelColor(0, 0, 255, 0);
+      leds.show();
+    }
+    else {
+      cycle = 1;
+      leds.setPixelColor(0, 0, 0, 0);
+      leds.show();
+    }
+    break;
+  case 5:
+    leds.setPixelColor(0, 0, 255, 0);
+    leds.show();
+    break;
+  case 4:
+    leds.setPixelColor(0, 127, 255, 0);
+    leds.show();
+    break;
+  case 3:
+    leds.setPixelColor(0, 255, 127, 0);
+    leds.show();
+    break;
+  case 2:
+    leds.setPixelColor(0, 255, 0, 0);
+    leds.show();
+    break;
+  case 1:
+    if(cycle) {
+      cycle = 0;
+      leds.setPixelColor(0, 255, 0, 0);
+      leds.show();
+    }
+    else {
+      cycle = 1;
+      leds.setPixelColor(0, 0, 0, 0);
+      leds.show();
+    }
+    break;
+  default:
+    break;
+  }
+}
 
 void loop() {
-  if(millis() - loopMillis > 4000) {
+  if(millis() - loopMillis > 2000) {
     loopMillis = millis();
     fanCheck();
+    neoPixelTask();
   }
   powerButtonCheck();
   uint16_t batV = getBatVoltage();
-  if (3764 <  batV < 3844) {
+  if (3610 < batV) {
+    batStat = 1;
+  }
+  if (3750 < batV) {
+    batStat = 2;
+  }
+  if (3840 < batV) {
+    batStat = 3;
+  }
+  if (3980 < batV) {
+    batStat = 4;
+  }
+  if (4150 < batV) {
+    batStat = 5;
+  }
+  uint8_t chrgStat = getChrgStatus();
+  if(chrgStat == 3 || chrgStat == 4) {
+    cycle = 1;
+    batStat = 6;
+    neoPixelTask();
   }
   
 }
