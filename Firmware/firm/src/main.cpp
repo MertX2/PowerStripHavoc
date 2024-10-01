@@ -3,6 +3,7 @@
 #include <tinyNeoPixel_Static.h>
 #include <avr/sleep.h>
 
+#define DEBUG
 
 #define BTN_PIN PIN_PA5
 #define EN_PIN PIN_PA2
@@ -484,6 +485,7 @@ void setup() {
   pinModeFast(BTN_PIN, INPUT_PULLUP);
   pinModeFast(EN_PIN, OUTPUT);
   pinModeFast(FAN_PIN, OUTPUT);
+  pinModeFast(NTC_PIN, INPUT);
 
   Serial.begin(9600);
   Wire.begin(ADDR);
@@ -587,6 +589,16 @@ void loop() {
     batStat = 6;
     neoPixelTask();
   }
+  #ifdef DEBUG
+    Serial.print("ICHG");
+    Serial.println(String(getChrgCurrent()));
+    Serial.print("VBA");
+    Serial.println(String(getVBUSAttached()));
+    Serial.print("VBV");
+    Serial.println(String(getVBUSVoltage()));
+    Serial.print("SYSV");
+    Serial.println(String(getSysVoltage()));
+  #endif
   
 }
   // put your main code here, to run repeatedly:
