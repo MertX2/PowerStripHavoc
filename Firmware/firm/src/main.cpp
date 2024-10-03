@@ -11,6 +11,7 @@
 #define SCL_PIN 9
 #define FAN_PIN PIN_PA4
 #define NTC_PIN PIN_PA1
+#define U10_PIN PIN_PB3
 
 // KELVIN = 273.15
 
@@ -433,6 +434,8 @@ void wakeSetup() {
     }
     ADC0.CTRLA |= 1;
     digitalWriteFast(EN_PIN, HIGH);
+    delay(120);
+    digitalWriteFast(U10_PIN, HIGH);
 }
 
 void goToSleep() {
@@ -486,6 +489,7 @@ void setup() {
   pinModeFast(EN_PIN, OUTPUT);
   pinModeFast(FAN_PIN, OUTPUT);
   pinModeFast(NTC_PIN, INPUT);
+  pinModeFast(U10_PIN, OUTPUT);
 
   Serial.begin(9600);
   Wire.begin(ADDR);
