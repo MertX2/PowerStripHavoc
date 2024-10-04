@@ -495,7 +495,8 @@ void setup() {
   Wire.begin(ADDR);
   writeToAllRegs();
   Serial.println("REGS SETUP!");
-  goToSleep();
+  //goToSleep();
+  digitalWriteFast(EN_PIN, HIGH);
 }
 
 void fanCheck() {
@@ -565,7 +566,7 @@ void neoPixelTask() {
 }
 
 void loop() {
-  if(millis() - loopMillis > 2000) {
+  /*if(millis() - loopMillis > 2000) {
     loopMillis = millis();
     fanCheck();
     neoPixelTask();
@@ -602,7 +603,7 @@ void loop() {
     Serial.println(String(getVBUSVoltage()));
     Serial.print("SYSV");
     Serial.println(String(getSysVoltage()));
-  #endif
+  #endif*/
   
 }
   // put your main code here, to run repeatedly:
