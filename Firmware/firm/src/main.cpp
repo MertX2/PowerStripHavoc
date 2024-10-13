@@ -94,18 +94,49 @@ uint8_t readRawReg(uint8_t REG_ADDR) {
     return Wire.read();
 }
 
-void writeToAllRegs() {
+bool regWriteCheck() {
+  if (readRawReg(1) == 197) {
+    Serial.println("REG WRITE SUCCESS!");
+    return true;
+  }
+  else {
+    Serial.println("ERROR OCCURED DURING WRITE!");
+    leds.setPixelColor(0, 255, 0, 0); // first LED full RED
+    leds.show();
+    leds.setPixelColor(0, 0, 0, 0);
+    leds.show();
+    leds.setPixelColor(0, 255, 0, 0); 
+    leds.show();
+    return false;
+  }
+}
+
+bool writeToAllRegs() {
+  Serial.println("STARTING WRITE");
   writeToReg(0x00, reg00);
+  Serial.println("00");
   writeToReg(0x01, reg01);
+  Serial.println("01");
   writeToReg(0x02, reg02);
+  Serial.println("02");
   writeToReg(0x03, reg03);
+  Serial.println("03");
   writeToReg(0x04, reg04);
+  Serial.println("04");
   writeToReg(0x05, reg05);
+  Serial.println("05");
   writeToReg(0x06, reg06);
+  Serial.println("06");
   writeToReg(0x07, reg07);
+  Serial.println("07");
   writeToReg(0x08, reg08);
+  Serial.println("08");
   writeToReg(0x09, reg09);
+  Serial.println("09");
   writeToReg(0x0A, reg0a);
+  Serial.println("0A");
+  Serial.println("WRITE END!");
+  return regWriteCheck();
 }
 
 void enableBQADC() {
@@ -122,8 +153,8 @@ uint8_t getChrgStatus() { //REG0B
   //b[0] = 0 != (regData & 1);
   //b[1] = 0 != (regData & 2);
   //b[2] = 0 != (regData & 4);
-  b[0] = 0 != (regData & 8);
-  b[1] = 0 != (regData & 16);
+  b[1] = 0 != (regData & 8);
+  b[0] = 0 != (regData & 16);
   //b[5] = 0 != (regData & 32);
   //b[6] = 0 != (regData & 64);
   //b[7] = 0 != (regData & 128);
@@ -149,14 +180,14 @@ uint16_t getBatVoltage() { //REG0E
   enableBQADC();
   bool b[7];
   uint8_t regData = readRawReg(0x0E);
-  b[0] = 0 != (regData & 1);
-  b[1] = 0 != (regData & 2);
-  b[2] = 0 != (regData & 4);
-  b[0] = 0 != (regData & 8);
-  b[1] = 0 != (regData & 16);
-  b[5] = 0 != (regData & 32);
-  b[6] = 0 != (regData & 64);
-  //b[7] = 0 != (regData & 128);
+  //b[7] = 0 != (regData & 1);
+  b[6] = 0 != (regData & 2);
+  b[5] = 0 != (regData & 4);
+  b[4] = 0 != (regData & 8);
+  b[3] = 0 != (regData & 16);
+  b[2] = 0 != (regData & 32);
+  b[1] = 0 != (regData & 64);
+  b[0] = 0 != (regData & 128);
 
   uint16_t adcVal = 2304;
   if(b[0]) {
@@ -194,14 +225,14 @@ uint16_t getSysVoltage() { //REG0F
   enableBQADC();
   bool b[7];
   uint8_t regData = readRawReg(0x0F);
-  b[0] = 0 != (regData & 1);
-  b[1] = 0 != (regData & 2);
-  b[2] = 0 != (regData & 4);
-  b[0] = 0 != (regData & 8);
-  b[1] = 0 != (regData & 16);
-  b[5] = 0 != (regData & 32);
-  b[6] = 0 != (regData & 64);
-  //b[7] = 0 != (regData & 128);
+  //b[7] = 0 != (regData & 1);
+  b[6] = 0 != (regData & 2);
+  b[5] = 0 != (regData & 4);
+  b[4] = 0 != (regData & 8);
+  b[3] = 0 != (regData & 16);
+  b[2] = 0 != (regData & 32);
+  b[1] = 0 != (regData & 64);
+  b[0] = 0 != (regData & 128);
 
   uint16_t adcVal = 2304;
   if(b[0]) {
@@ -239,14 +270,14 @@ uint16_t getVBUSVoltage() { //REG11
   enableBQADC();
   bool b[7];
   uint8_t regData = readRawReg(0x11);
-  b[0] = 0 != (regData & 1);
-  b[1] = 0 != (regData & 2);
-  b[2] = 0 != (regData & 4);
-  b[0] = 0 != (regData & 8);
-  b[1] = 0 != (regData & 16);
-  b[5] = 0 != (regData & 32);
-  b[6] = 0 != (regData & 64);
-  //b[7] = 0 != (regData & 128);
+  //b[7] = 0 != (regData & 1);
+  b[6] = 0 != (regData & 2);
+  b[5] = 0 != (regData & 4);
+  b[4] = 0 != (regData & 8);
+  b[3] = 0 != (regData & 16);
+  b[2] = 0 != (regData & 32);
+  b[1] = 0 != (regData & 64);
+  b[0] = 0 != (regData & 128);
 
   uint16_t adcVal = 2600;
   if(b[0]) {
@@ -283,7 +314,7 @@ uint16_t getVBUSVoltage() { //REG11
 bool getVBUSAttached() { //REG11
   bool b = 0;
   uint8_t regData = readRawReg(0x11);
-  b = 0 != (regData & 128);
+  b = 0 != (regData & 1);
   return b;
 }
 
@@ -291,14 +322,14 @@ uint16_t getChrgCurrent() { //REG12
   enableBQADC();
   bool b[7];
   uint8_t regData = readRawReg(0x12);
-  b[0] = 0 != (regData & 1);
-  b[1] = 0 != (regData & 2);
-  b[2] = 0 != (regData & 4);
-  b[0] = 0 != (regData & 8);
-  b[1] = 0 != (regData & 16);
-  b[5] = 0 != (regData & 32);
-  b[6] = 0 != (regData & 64);
-  //b[7] = 0 != (regData & 128);
+  //b[7] = 0 != (regData & 1);
+  b[6] = 0 != (regData & 2);
+  b[5] = 0 != (regData & 4);
+  b[4] = 0 != (regData & 8);
+  b[3] = 0 != (regData & 16);
+  b[2] = 0 != (regData & 32);
+  b[1] = 0 != (regData & 64);
+  b[0] = 0 != (regData & 128);
 
   uint16_t adcVal = 2304;
   if(b[0]) {
@@ -336,14 +367,14 @@ uint16_t getICOILIM() { //REG13
   enableBQADC();
   bool b[6];
   uint8_t regData = readRawReg(0x12);
-  b[0] = 0 != (regData & 1);
-  b[1] = 0 != (regData & 2);
-  b[2] = 0 != (regData & 4);
-  b[0] = 0 != (regData & 8);
-  b[1] = 0 != (regData & 16);
-  b[5] = 0 != (regData & 32);
-  //b[6] = 0 != (regData & 64);
-  //b[7] = 0 != (regData & 128);
+  //b[7] = 0 != (regData & 1);
+  //b[6] = 0 != (regData & 2);
+  b[5] = 0 != (regData & 4);
+  b[4] = 0 != (regData & 8);
+  b[3] = 0 != (regData & 16);
+  b[2] = 0 != (regData & 32);
+  b[1] = 0 != (regData & 64);
+  b[0] = 0 != (regData & 128);
 
   uint16_t adcVal = 2304;
   if(b[0]) {
@@ -373,22 +404,7 @@ uint16_t getICOILIM() { //REG13
   return adcVal;
 }
 
-bool regWriteCheck() {
-  if (readRawReg(1) == 197) {
-    Serial.println("REG WRITE SUCCESS!");
-    return true;
-  }
-  else {
-    Serial.println("ERROR OCCURED DURING WRITE!");
-    leds.setPixelColor(0, 255, 0, 0); // first LED full RED
-    leds.show();
-    leds.setPixelColor(0, 0, 0, 0);
-    leds.show();
-    leds.setPixelColor(0, 255, 0, 0); 
-    leds.show();
-    return false;
-  }
-}
+
 
 uint8_t getTemp() {
   
@@ -493,8 +509,15 @@ void setup() {
 
   Serial.begin(9600);
   Wire.begin(ADDR);
-  writeToAllRegs();
-  Serial.println("REGS SETUP!");
+  if(writeToAllRegs()) {
+    Serial.println("REGS SETUP!");
+  }
+  else {
+    while(!writeToAllRegs()) {
+      Serial.println("RETRYING...");
+    }
+  }
+  
   goToSleep();
   //digitalWriteFast(EN_PIN, HIGH);
 }
