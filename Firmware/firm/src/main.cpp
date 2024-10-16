@@ -52,7 +52,7 @@ uint8_t reg0D = 0; // USeless
 
 uint32_t intermediate = 1023UL * 1500;
 
-uint8_t ADDR = 106;
+uint8_t ADDR = 0x6A;
 
 uint16_t readSupplyVoltage() { // returns value in millivolts to avoid floating point //NUR NÖTIG, WENN BQ VSYS SICH NICHT FESTLEGEN LÄSST !!!
   
