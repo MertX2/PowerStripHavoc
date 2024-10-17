@@ -91,7 +91,8 @@ uint8_t readRawReg(uint8_t REG_ADDR) {
     Wire.endTransmission();
     Wire.requestFrom(ADDR, (uint8_t)1);
     delayMicroseconds(100);
-    return Wire.read();
+    uint8_t returnVal = Wire.read();
+    return returnVal;
 }
 
 bool regWriteCheck() {
@@ -137,6 +138,41 @@ bool writeToAllRegs() {
   Serial.println("0A");
   Serial.println("WRITE END!");
   return regWriteCheck();
+}
+
+void readAllRegs() {
+  Serial.println("STARTING READ");
+  Serial.println("00");
+  Serial.println(readRawReg(0x00));
+  Serial.println("01");
+  Serial.println(readRawReg(0x01));
+  Serial.println("02");
+  Serial.println(readRawReg(0x02));
+  Serial.println("03");
+  Serial.println(readRawReg(0x03));
+  Serial.println("04");
+  Serial.println(readRawReg(0x04));
+  Serial.println("05");
+  Serial.println(readRawReg(0x05));
+  Serial.println("06");
+  Serial.println(readRawReg(0x06));
+  Serial.println("07");
+  Serial.println(readRawReg(0x07));
+  Serial.println("08");
+  Serial.println(readRawReg(0x08));
+  Serial.println("09");
+  Serial.println(readRawReg(0x09));
+  Serial.println("0A");
+  Serial.println(readRawReg(0x0A));
+  Serial.println("0B");
+  Serial.println(readRawReg(0x0B));
+  Serial.println("0C");
+  Serial.println(readRawReg(0x0C));
+  Serial.println("0E");
+  Serial.println(readRawReg(0x0E));
+  Serial.println("0F");
+  Serial.println(readRawReg(0x0F));
+  Serial.println("READ END!");
 }
 
 void enableBQADC() {
