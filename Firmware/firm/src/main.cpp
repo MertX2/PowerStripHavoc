@@ -21,21 +21,23 @@ bool fanOn = 0;
 byte pixels[12];
 tinyNeoPixel leds = tinyNeoPixel(4, PIN_PA7, NEO_GRB, pixels);
 
-const uint8_t reg00 = 63;
+const uint8_t reg00 = 0x3F; //00111111
 
-const uint8_t reg01 = 197; //11000101
+const uint8_t reg01 = 0xC5; //11000101
 
-const uint8_t reg02 = 48; //00110000  (No ADC)
+const uint8_t reg02 = 0x30; //00110000  (No ADC)
 const uint8_t reg02_ADC_EN = 176; //or 10110000 (Start ADC Conversion)
 
-const uint8_t reg03 = 26; //00011010
-const uint8_t reg04 = 127;  //01111111
-const uint8_t reg05 = 19; //00010011
-const uint8_t reg06 = 98; //01100010
-const uint8_t reg07 = 201; //11001001
-const uint8_t reg08 = 3; //00000011
-const uint8_t reg09 = 64; //01000000
-const uint8_t reg0a = 144; //10010000
+const uint8_t reg03 = 0x1A; //00011010
+const uint8_t reg04 = 0x7F;  //01111111
+const uint8_t reg05 = 0x13; //00010011
+const uint8_t reg06 = 0x62; //01100010
+const uint8_t reg07 = 0xC9; //11001001
+const uint8_t reg08 = 0x03; //00000011
+const uint8_t reg09 = 0x40; //01000000
+const uint8_t reg0a = 0x90; //10010000
+
+const uint8_t reg0D = 0xFF; // 11111111
 
 uint8_t reg0B = 0; //READ ONLY //xxxBBxxx CHRG_STAT REGISTER, CHARGING MODE, 
 uint8_t reg0C = 0; //READ ONLY
@@ -48,7 +50,9 @@ uint8_t reg11 = 0; //READ ONLY, First bit VBUS attached, lower 7 bits VBUS Volta
 uint8_t reg12 = 0; //READ ONLY, Lower 7 bits charge current
 uint8_t reg13 = 0; //READ ONLY, lower 6 bits ICO ILIM
 
-uint8_t reg0D = 0; // USeless
+const uint8_t regWriteList[] = {0x07, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x0A, 0x0D};
+const uint8_t regDataList[] = {reg07, reg00, reg02, reg03, reg04, reg05, reg06, reg0a, reg0D};
+
 
 uint32_t intermediate = 1023UL * 1500;
 
@@ -77,26 +81,47 @@ uint16_t getAnalogValue() {
  return ADC0.RES / 2; // return the most recent result on channel A
 }
 
-void writeToReg(uint8_t	REG_ADDR, uint8_t REG_DATA) {
-  Wire.beginTransmission(ADDR);
-  Wire.write((uint8_t)REG_ADDR);
-  Wire.write(REG_DATA);
-  Wire.endTransmission();
+
+
+int writeToReg(uint8_t reg, uint8_t data)
+{
+    int rtn;
+    Wire.beginTransmission((uint8_t)ADDR);
+    Wire.write((uint8_t)reg);
+    Wire.write((uint8_t)data);
+    rtn = Wire.endTransmission();
+
+    return !rtn;
 }
 
-uint8_t readRawReg(uint8_t REG_ADDR) {
-  
-    Wire.beginTransmission(ADDR);
-    Wire.write(REG_ADDR);
-    Wire.endTransmission();
-    Wire.requestFrom(ADDR, (uint8_t)1);
+int read_byte(uint8_t *data, uint8_t reg)
+{
+
+    int rtn;
+    Wire.beginTransmission((uint8_t)ADDR);
+    Wire.write(reg);
+    rtn = Wire.endTransmission();
+
+    Wire.requestFrom((uint8_t)ADDR, (uint8_t)1);
     delayMicroseconds(100);
-    uint8_t returnVal = Wire.read();
-    return returnVal;
+    *data = Wire.read();
+
+    return !rtn;
 }
+
+int readRawReg(byte reg)
+{
+    uint8_t val;
+
+    read_byte(&val, reg);
+
+    return val;
+}
+
+
 
 bool regWriteCheck() {
-  if (readRawReg(1) == 197) {
+  if (readRawReg(0x01) == reg01) {
     Serial.println("REG WRITE SUCCESS!");
     return true;
   }
@@ -113,31 +138,14 @@ bool regWriteCheck() {
 }
 
 bool writeToAllRegs() {
-  Serial.println("STARTING WRITE");
-  writeToReg(0x00, reg00);
-  Serial.println("00");
-  writeToReg(0x01, reg01);
-  Serial.println("01");
-  writeToReg(0x02, reg02);
-  Serial.println("02");
-  writeToReg(0x03, reg03);
-  Serial.println("03");
-  writeToReg(0x04, reg04);
-  Serial.println("04");
-  writeToReg(0x05, reg05);
-  Serial.println("05");
-  writeToReg(0x06, reg06);
-  Serial.println("06");
-  writeToReg(0x07, reg07);
-  Serial.println("07");
-  writeToReg(0x08, reg08);
-  Serial.println("08");
-  writeToReg(0x09, reg09);
-  Serial.println("09");
-  writeToReg(0x0A, reg0a);
-  Serial.println("0A");
-  Serial.println("WRITE END!");
-  return regWriteCheck();
+    for(int i = 0; i < 9;i++) {
+        bool rtn = writeToReg(regWriteList[i], regDataList[i]);
+        if(rtn == 0) {
+            Serial.print("ERROR REG: ");
+            Serial.println(i);
+        }
+        delay(100);
+    }
 }
 
 void readAllRegs() {
@@ -545,16 +553,11 @@ void setup() {
 
   Serial.begin(9600);
   Wire.begin(ADDR);
-  if(writeToAllRegs()) {
-    Serial.println("REGS SETUP!");
-  }
-  else {
-    while(!writeToAllRegs()) {
-      Serial.println("RETRYING...");
-    }
-  }
   
-  goToSleep();
+
+  writeToAllRegs();
+  
+  //goToSleep();
   //digitalWriteFast(EN_PIN, HIGH);
 }
 
