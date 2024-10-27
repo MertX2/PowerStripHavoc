@@ -552,7 +552,9 @@ void setup() {
   pinModeFast(U10_PIN, OUTPUT);
 
   Serial.begin(9600);
-  Wire.begin(ADDR);
+  Wire.swap(0);
+  Wire.begin();
+  Wire.setClock(100000);
   
 
   writeToAllRegs();
