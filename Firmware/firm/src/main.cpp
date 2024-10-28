@@ -558,7 +558,7 @@ void setup() {
   
 
   writeToAllRegs();
-  
+  readAllRegs();
   //goToSleep();
   //digitalWriteFast(EN_PIN, HIGH);
 }
