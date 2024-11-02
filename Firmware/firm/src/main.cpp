@@ -21,21 +21,21 @@ bool fanOn = 0;
 byte pixels[12];
 tinyNeoPixel leds = tinyNeoPixel(4, PIN_PA7, NEO_GRB, pixels);
 
-const uint8_t reg00 = 0x3F; //00111111
+const uint8_t reg00 = 0x3F; //00111111 = 63
 
-const uint8_t reg01 = 0xC5; //11000101
+const uint8_t reg01 = 0xC5; //11000101 = 197
 
-const uint8_t reg02 = 0x30; //00110000  (No ADC)
-const uint8_t reg02_ADC_EN = 176; //or 10110000 (Start ADC Conversion)
+const uint8_t reg02 = 0x30; //00110000 = 48 (No ADC)
+const uint8_t reg02_ADC_EN = 176; //or 10110000 = 176(Start ADC Conversion)
 
-const uint8_t reg03 = 0x1A; //00011010
-const uint8_t reg04 = 0x7F;  //01111111
-const uint8_t reg05 = 0x13; //00010011
-const uint8_t reg06 = 0x62; //01100010
-const uint8_t reg07 = 0xC9; //11001001
-const uint8_t reg08 = 0x03; //00000011
-const uint8_t reg09 = 0x40; //01000000
-const uint8_t reg0a = 0x90; //10010000
+const uint8_t reg03 = 0x1A; //00011010 = 26
+const uint8_t reg04 = 0x7F;  //01111111 = 127
+const uint8_t reg05 = 0x13; //00010011 = 19
+const uint8_t reg06 = 0x62; //01100010 = 98
+const uint8_t reg07 = 0xC9; //11001001 = 201
+const uint8_t reg08 = 0x03; //00000011 = 3
+const uint8_t reg09 = 0x40; //01000000 = 64
+const uint8_t reg0a = 0x90; //10010000 = 144
 
 const uint8_t reg0D = 0xFF; // 11111111
 
