@@ -163,12 +163,10 @@ void readAllRegs() {
   Serial.println("READ END!");
 }
 //Interrupt to wake the chip up from sleep whenever power button is pressed.
-ISR(PORTA_PORT_vect, ISR_NAKED)
+/*ISR(PORTA_PORT_vect)
 {
-  PORTA.PIN2CTRL &= ~PORT_ISC_gm;
-  VPORTA.INTFLAGS = (1 << 2);
-  reti();
-}
+  return;
+}*/
 
 //Button timing variable
 unsigned long startMillis = 0;
@@ -177,39 +175,45 @@ unsigned long startMillis = 0;
 void goToSleep();
 
 void wakeSetup() {
-    startMillis = millis();
-    while(uint16_t(millis - startMillis) < 2000) {
-      if (digitalReadFast(BTN_PIN) == HIGH) {
-        goToSleep();
-      }
+  Serial.println("WK0");
+  startMillis = millis();
+  while(digitalReadFast(BTN_PIN) == LOW) {
+    if(uint16_t(millis - startMillis) > 2000) {
+      Serial.println("WK1");
+      ADC0.CTRLA |= 1;
+      digitalWriteFast(EN_PIN, HIGH);
+      delay(150);
+      digitalWriteFast(FAN_PIN, HIGH);
+      //PORTA.PIN2CTRL = 0x08;
+      //VPORTA.INTFLAGS = 255; 
+      Serial.println("RT");
+      return;
     }
-    ADC0.CTRLA |= 1;
-    digitalWriteFast(EN_PIN, HIGH);
-    delay(150);
-    digitalWriteFast(FAN_PIN, HIGH);
+  }
+  goToSleep(); 
 }
 
 void goToSleep() {
   ADC0.CTRLA &= ~ADC_ENABLE_bm;
-  PORTA.PIN2CTRL |= PORT_ISC_gm;
+  PORTA.PIN2CTRL |= PORT_ISC_FALLING_gc;
   if(!regWriteCheck) {
     writeToAllRegs();
   }
+  Serial.println("SLP");
+  Serial.flush();
+  delay(100);
   sleep_cpu();
-  wakeSetup();
+  //wakeSetup();
 }
 
 void powerButtonCheck() {
-  if(digitalReadFast(BTN_PIN) == LOW) {
-    startMillis = millis();
-    while(uint16_t(millis - startMillis) < 2000) {
-      if (digitalReadFast(BTN_PIN) == HIGH)
-      {
-        return;
-      }
-    goToSleep();
+  startMillis = millis();
+  while(digitalReadFast(BTN_PIN) == LOW) {
+    if(uint16_t(millis - startMillis) > 2000) {
+        goToSleep();
     }
   }
+  return;
 }
 
 void setup() {
@@ -246,6 +250,7 @@ void setup() {
   Wire.begin();
   Wire.setClock(100000);
   //BQ Write
+  Serial.println("SET");
   if(writeToAllRegs() == 0) {
     Serial.println("WERR");
     delay(100);
@@ -258,6 +263,7 @@ void setup() {
     Serial.println("WERR");
   }
   //readAllRegs();
+  attachInterrupt(digitalPinToInterrupt(BTN_PIN),wakeSetup,FALLING);
   goToSleep();
 }
 
@@ -281,6 +287,8 @@ void loop() {
     Serial.println(String(getVBUSVoltage()));
     Serial.print("SYSV");
     Serial.println(String(getSysVoltage()));
+    Serial.print("BAT");
+    Serial.println(String(getBatVoltage()));
     #endif
   }
   powerButtonCheck();
